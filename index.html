@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Operação Linha Cinza</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:#07090c;
+  color:#eee;
+  font:16px Arial,sans-serif
+}
+
+.wrap{
+  max-width:900px;
+  margin:35px auto;
+  padding:16px
+}
+
+.box{
+  background:#10151b;
+  border:1px solid #303841;
+  border-radius:16px;
+  padding:26px
+}
+
+.tag{
+  letter-spacing:3px;
+  color:#8e99a5;
+  font-size:11px
+}
+
+h1{
+  font-size:34px;
+  margin:10px 0
+}
+
+h2{
+  line-height:1.25
+}
+
+p{
+  line-height:1.65;
+  color:#d1d6db
+}
+
+.progress{
+  height:7px;
+  background:#272d34;
+  border-radius:8px;
+  margin:20px 0;
+  overflow:hidden
+}
+
+.bar{
+  height:100%;
+  width:0;
+  background:#ddd;
+  transition:.25s
+}
+
+.option{
+  display:block;
+  width:100%;
+  margin:12px 0;
+  padding:17px;
+  border:1px solid #3a434d;
+  border-radius:12px;
+  background:#171d24;
+  color:#fff;
+  text-align:left;
+  cursor:pointer;
+  font-size:15px;
+  line-height:1.5
+}
+
+.option:hover{
+  background:#232a32;
+  border-color:#8c969f
+}
+
+.option strong{
+  display:inline-block;
+  width:25px
+}
+
+.btn{
+  padding:13px 20px;
+  border:0;
+  border-radius:10px;
+  background:#e7e9eb;
+  color:#090b0e;
+  font-weight:700;
+  cursor:pointer
+}
+
+.hidden{
+  display:none
+}
+
+.result{
+  text-align:center
+}
+
+.stars{
+  font-size:48px;
+  color:#e5c65c;
+  letter-spacing:4px
+}
+
+.notice{
+  padding:14px;
+  margin:18px 0;
+  background:#0b0f13;
+  border-left:3px solid #777
+}
+
+.small{
+  color:#8d97a2;
+  font-size:13px
+}
+
+.stats{
+  margin-top:20px;
+  text-align:left;
+  background:#0b0f13;
+  border:1px solid #2e353d;
+  border-radius:12px;
+  padding:15px
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  padding:9px 0;
+  border-bottom:1px solid #252b31
+}
+
+.row:last-child{
+  border:0
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+<div class="box">
+
+<section id="start">
+
+<div class="tag">
+AVALIAÇÃO SIMULADA • LINHA CINZA
+</div>
+
+<h1>OPERAÇÃO LINHA CINZA</h1>
+
+<p>
+Uma avaliação estratégica com 15 situações independentes.
+Leia cada cenário com atenção e escolha uma única alternativa.
+</p>
+
+<div class="notice">
+Suas escolhas são registradas. Não existe botão de voltar.
+</div>
+
+<button class="btn" onclick="start()">
+INICIAR AVALIAÇÃO
+</button>
+
+</section>
+
+
+<section id="quiz" class="hidden">
+
+<div class="small" id="count"></div>
+
+<div class="progress">
+<div class="bar" id="bar"></div>
+</div>
+
+<h2 id="title"></h2>
+
+<p id="scenario"></p>
+
+<div id="options"></div>
+
+</section>
+
+
+<section id="result" class="hidden result">
+
+<div class="tag">
+RESULTADO
+</div>
+
+<h2 id="resultTitle"></h2>
+
+<div class="stars" id="stars"></div>
+
+<p id="resultText"></p>
+
+<div class="stats">
+
+<div class="row">
+<span>Respondidas</span>
+<b id="answered"></b>
+</div>
+
+<div class="row">
+<span>Pontuação</span>
+<b id="score"></b>
+</div>
+
+<div class="row">
+<span>Classificação</span>
+<b id="class"></b>
+</div>
+
+</div>
+
+<br>
+
+<button class="btn" onclick="start()">
+REFAZER AVALIAÇÃO
+</button>
+
+</section>
+
+</div>
+</div>
+
+
+<script>
+
+const qs=[
+
+[
+'O relatório fragmentado',
+
+'Você recebe um relatório de uma operação simulada. Há fatos confirmados, uma informação provável e um dado que veio de uma fonte secundária. O dado secundário pode mudar sua próxima decisão, mas não é suficiente para justificar uma conclusão sozinho.',
+
+'Usar os fatos confirmados e tratar o dado secundário como uma hipótese que merece verificação antes de influenciar a decisão.',
+
+'Usar os fatos confirmados e o dado secundário juntos, desde que a combinação pareça coerente com o cenário.',
+
+'Suspender toda a análise até conseguir transformar cada informação em certeza absoluta.',
+
+'Escolher a interpretação mais provável e revisar o dado secundário somente se o resultado contrariar o plano.',
+
+5,4,1,2
+],
+
+[
+'A contradição de horários',
+
+'Duas fontes confiáveis registram horários diferentes para o mesmo acontecimento. Depois você percebe que uma fonte registrou quando recebeu a informação, enquanto a outra registrou quando o fato foi observado.',
+
+'Escolher o horário mais recente porque informações novas devem substituir as antigas.',
+
+'Tratar os dois horários como igualmente incompatíveis até descobrir qual deles está errado.',
+
+'Comparar o que cada horário representa antes de concluir que existe uma contradição real.',
+
+'Escolher o horário que melhor se encaixa na sequência dos acontecimentos descrita no relatório.',
+
+3,2,5,4
+],
+
+[
+'O plano que quase funciona',
+
+'Seu planejamento está correto em quase todos os pontos, mas uma nova informação confirmada altera uma condição importante. Duas alternativas continuam possíveis: adaptar o plano atual ou trocar para outro plano já conhecido.',
+
+'Adaptar apenas a parte afetada e verificar se o restante do plano continua coerente.',
+
+'Trocar para o plano alternativo porque uma mudança confirmada significa que o plano original perdeu validade.',
+
+'Comparar as consequências das duas alternativas antes de escolher entre adaptar e trocar.',
+
+'Manter o plano original por enquanto e só alterar se a nova informação produzir outro problema.',
+
+5,2,4,3
+],
+
+[
+'Pressão e informação incompleta',
+
+'Faltam poucos minutos para uma decisão. Você tem duas alternativas. A primeira é mais rápida, mas depende de uma informação não confirmada. A segunda demora mais, porém funciona em mais de uma hipótese possível.',
+
+'Escolher a alternativa rápida porque o tempo disponível é um fator relevante.',
+
+'Escolher a alternativa mais robusta, mesmo que ela exija um pouco mais de tempo.',
+
+'Verificar se a informação pendente pode ser confirmada rapidamente antes de escolher entre as duas.',
+
+'Escolher a alternativa rápida, mas registrar a incerteza para revisar depois.',
+
+3,5,4,2
+],
+
+[
+'O detalhe fora do padrão',
+
+'Um detalhe pequeno não combina perfeitamente com o restante do relatório. Ele pode ser apenas uma diferença de registro, mas também pode indicar que uma parte da análise está incompleta.',
+
+'Ignorar o detalhe porque ele é pequeno e não há prova de erro.',
+
+'Tratar o detalhe como falso até que alguém prove o contrário.',
+
+'Isolar o detalhe, avaliar seu impacto e verificar a fonte antes de deixá-lo influenciar a decisão.',
+
+'Continuar usando o detalhe como verdadeiro, mas evitar tomar decisões importantes baseadas somente nele.',
+
+3,1,5,4
+],
+
+[
+'Duas hipóteses quase iguais',
+
+'Você possui duas explicações para o mesmo cenário. As duas explicam quase todos os fatos conhecidos; a diferença está em um único ponto que ainda não foi confirmado.',
+
+'Escolher a hipótese que explica mais fatos e seguir com ela.',
+
+'Manter as duas hipóteses e procurar uma verificação específica para o ponto que as diferencia.',
+
+'Escolher a hipótese mais simples, pois ela exige menos suposições adicionais.',
+
+'Usar a hipótese mais simples como provisória, mas procurar a informação que pode confirmar ou derrubá-la.',
+
+3,5,2,4
+],
+
+[
+'A mensagem incompleta',
+
+'Uma mensagem chega cortada. Você consegue entender o objetivo geral, mas uma frase ausente pode mudar a interpretação de uma instrução. Há tempo para agir, porém não para descobrir todas as informações possíveis.',
+
+'Agir usando a interpretação mais provável e corrigir o plano se a mensagem completa chegar depois.',
+
+'Usar somente a parte confirmada e buscar esclarecimento exatamente sobre a informação que pode mudar a decisão.',
+
+'Esperar a mensagem completa antes de fazer qualquer preparação, mesmo que algumas ações já sejam seguras.',
+
+'Preparar duas possibilidades compatíveis com as informações confirmadas, sem tratar nenhuma como certeza.',
+
+4,5,2,4
+],
+
+[
+'A proposta inesperada',
+
+'Um integrante da equipe apresenta uma solução diferente da sua. As duas parecem viáveis e ambas usam informações corretas, mas cada uma possui riscos diferentes.',
+
+'Escolher a sua proposta porque você já analisou suas consequências.',
+
+'Escolher a proposta do integrante porque uma segunda perspectiva pode revelar um problema que você não percebeu.',
+
+'Comparar riscos, benefícios e informações que sustentam cada proposta antes de decidir.',
+
+'Tentar combinar as duas propostas imediatamente, mesmo sem verificar se os métodos são compatíveis.',
+
+2,3,5,1
+],
+
+[
+'A revisão de cinco minutos',
+
+'Você acredita que sua estratégia está pronta. Restam cinco minutos e uma revisão completa seria impossível. Você pode revisar os pontos mais críticos ou tentar reconstruir todo o raciocínio.',
+
+'Revisar os pontos com maior potencial de alterar a decisão e confirmar se eles continuam sustentados pelas informações.',
+
+'Refazer todo o raciocínio desde o início para garantir que nenhum detalhe tenha sido esquecido.',
+
+'Revisar apenas a conclusão final, porque os dados anteriores já foram analisados.',
+
+'Comparar rapidamente sua decisão com a alternativa que teria maior consequência caso sua hipótese principal estivesse errada.',
+
+5,2,3,4
+],
+
+[
+'A informação que confirma seu plano',
+
+'Você encontra uma nova informação que parece confirmar exatamente a estratégia que você queria usar. Ela veio de uma fonte razoável, mas você ainda não verificou se foi interpretada corretamente.',
+
+'Aceitar a informação porque ela confirma vários dados que você já possui.',
+
+'Verificar a origem e o significado da informação antes de usá-la como confirmação decisiva.',
+
+'Usar a informação provisoriamente e procurar uma segunda confirmação somente depois da decisão.',
+
+'Considerar a informação válida porque ela não contradiz nenhum dado conhecido.',
+
+3,5,4,2
+],
+
+[
+'A escolha entre duas boas opções',
+
+'Duas estratégias são defensáveis. A primeira é mais simples e previsível. A segunda é mais flexível, mas depende de acompanhamento constante. Não existe uma opção obviamente errada.',
+
+'Escolher automaticamente a estratégia mais simples para reduzir variáveis.',
+
+'Escolher a estratégia mais flexível porque ela permite reagir melhor a mudanças.',
+
+'Definir primeiro qual característica é mais importante para aquele cenário e então comparar as duas opções.',
+
+'Escolher a estratégia que exige menos decisões durante a execução, independentemente do cenário.',
+
+3,3,5,2
+],
+
+[
+'A informação que mudou de peso',
+
+'Uma informação que parecia pouco importante no começo passa a ter grande impacto depois que outro dado é confirmado. Você percebe que sua análise inicial deu peso insuficiente a ela.',
+
+'Manter a análise original para evitar alterar uma decisão já construída.',
+
+'Recalcular apenas a conclusão, sem revisar quais dados sustentam cada etapa.',
+
+'Reavaliar o peso dessa informação e verificar quais partes da decisão dependem dela.',
+
+'Substituir toda a análise por uma nova hipótese, sem aproveitar os fatos que continuam confirmados.',
+
+2,3,5,1
+],
+
+[
+'A equipe dividida',
+
+'Quatro integrantes defendem duas estratégias. Os dois lados possuem argumentos bons, mas alguns argumentos usam dados confirmados e outros usam previsões. A decisão precisa ser coletiva.',
+
+'Votar imediatamente para encerrar a discussão e seguir a maioria.',
+
+'Separar fatos confirmados de previsões e comparar quais argumentos realmente dependem de suposições.',
+
+'Escolher a estratégia defendida pelos integrantes com mais experiência.',
+
+'Tentar criar uma terceira estratégia que aproveite elementos das duas, depois de verificar se eles são compatíveis.',
+
+2,5,3,4
+],
+
+[
+'O último dado',
+
+'Pouco antes da decisão final, surge um dado novo. Ele é relevante, mas ainda não está claro se contradiz o planejamento ou apenas acrescenta uma condição.',
+
+'Mudar imediatamente o plano porque informação nova deve sempre ter prioridade.',
+
+'Ignorar o dado porque ele chegou tarde demais para ser considerado.',
+
+'Determinar primeiro o que o novo dado realmente altera e só então decidir se o plano precisa ser modificado.',
+
+'Manter o plano, mas registrar o dado como possível problema para uma revisão posterior.',
+
+2,1,5,4
+],
+
+[
+'A decisão final da Linha Cinza',
+
+'Você chega à última etapa com informações suficientes para tomar uma decisão, mas nenhuma alternativa elimina completamente a incerteza. Sua tarefa é escolher uma linha de ação coerente e reconhecer o limite do que pode ser afirmado.',
+
+'Escolher a alternativa mais provável e apresentar a hipótese como se fosse um fato para tornar a decisão mais convincente.',
+
+'Escolher a alternativa mais segura em qualquer circunstância, mesmo sem comparar se ela atende ao objetivo do cenário.',
+
+'Comparar as evidências, escolher a alternativa mais consistente com elas e deixar explícito qual ponto permanece incerto.',
+
+'Apresentar duas alternativas igualmente possíveis e evitar uma decisão até que a incerteza desapareça.',
+
+2,3,5,1
+]
+
+];
+
+
+let i=0;
+let score=0;
+let answered=0;
+
+
+function start(){
+
+i=0;
+score=0;
+answered=0;
+
+document.getElementById('start').classList.add('hidden');
+document.getElementById('result').classList.add('hidden');
+document.getElementById('quiz').classList.remove('hidden');
+
+show();
+
+}
+
+
+function show(){
+
+let q=qs[i];
+
+document.getElementById('count').textContent=
+`SITUAÇÃO ${i+1} DE 15`;
+
+document.getElementById('bar').style.width=
+((i+1)/15*100)+'%';
+
+document.getElementById('title').textContent=
+`Situação ${i+1} — ${q[0]}`;
+
+document.getElementById('scenario').textContent=
+q[1];
+
+let box=document.getElementById('options');
+
+box.innerHTML='';
+
+
+q.slice(2,6).forEach((text,n)=>{
+
+let b=document.createElement('button');
+
+b.className='option';
+
+b.type='button';
+
+b.innerHTML=
+'<strong>'+String.fromCharCode(65+n)+')</strong>'+text;
+
+b.onclick=()=>answer(q[6+n]);
+
+box.appendChild(b);
+
+});
+
+}
+
+
+function answer(v){
+
+answered++;
+
+score+=v;
+
+i++;
+
+if(i===15){
+
+finish();
+
+}else{
+
+show();
+
+}
+
+}
+
+
+function finish(){
+
+document.getElementById('quiz').classList.add('hidden');
+
+document.getElementById('result').classList.remove('hidden');
+
+
+let s=
+score>=46 ? 5 :
+score>=38 ? 4 :
+score>=29 ? 3 :
+score>=20 ? 2 :
+1;
+
+
+document.getElementById('stars').textContent=
+'★'.repeat(s)+'☆'.repeat(5-s);
+
+document.getElementById('resultTitle').textContent=
+s+' ESTRELA'+(s===1?'':'S');
+
+document.getElementById('answered').textContent=
+answered+' / 15';
+
+document.getElementById('score').textContent=
+score+' / 75';
+
+document.getElementById('class').textContent=
+[
+'INSUFICIENTE',
+'PRECISA MELHORAR',
+'INTERMEDIÁRIO',
+'QUASE PERFEITO',
+'GABARITOU'
+][s-1];
+
+
+document.getElementById('resultText').textContent=
+[
+'A avaliação terminou com um desempenho abaixo do esperado.',
+
+'A avaliação foi concluída, mas várias decisões poderiam ser mais bem fundamentadas.',
+
+'Você apresentou um desempenho intermediário, com decisões fortes e outras que poderiam ser revistas.',
+
+'Desempenho muito alto, com poucas decisões abaixo do esperado.',
+
+'Desempenho excepcional: decisões consistentes e bem fundamentadas ao longo de toda a avaliação.'
+][s-1];
+
+}
+
+</script>
+
+</body>
+  </html>
